@@ -185,11 +185,11 @@ done
 snapctl stop "$SNAP_NAME.postgres"
 
 # finally, disable and turn off non-default services
-# by default, we want the export-*, support-*, device-*, and redis services 
+# by default, we want the export-*, support-*, device-*, and mongod services 
 # off.
 # also the app-service-configurable service since that is meant to replace the 
 # export services
-for svc in export-distro export-client support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-random device-virtual redis; do
+for svc in export-distro export-client support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-random device-virtual mongod; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
@@ -216,3 +216,9 @@ if [ "$SNAP_ARCH" == "arm64" ]; then
     snapctl stop --disable "$SNAP_NAME.kong-daemon"
     snapctl stop --disable "$SNAP_NAME.security-proxy-setup"
 fi
+
+# also stop and disable mongo-worker
+snapctl stop --disable "$SNAP_NAME.mongo-worker"
+
+# set the dbtype to redis by default and turn off mongo-worker and mongod
+snapctl set dbtype=redis
