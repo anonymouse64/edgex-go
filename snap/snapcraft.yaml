@@ -17,6 +17,8 @@ icon: snap/local/assets/edgex-snap-icon.png
 architectures:
   - build-on: arm64
   - build-on: amd64
+  - build-on: armhf
+  - build-on: i386
 
 # for start-timeout, we need snapd 2.38
 # we need command-chain for the hooks too
@@ -428,6 +430,10 @@ parts:
       - on amd64: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
       - else:
           - on arm64: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
+          - else:
+            - on i386: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.10.tgz
+            - else:
+              - on armhf: https://fastdl.mongodb.org/linux/mongodb-linux-arm64-ubuntu1604-3.4.10.tgz
       - else fail
     organize:
       GNU-AGPL-3.0: usr/share/doc/mongodb/GNU-AGPL-3.0
