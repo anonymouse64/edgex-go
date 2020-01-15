@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <err.h>
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
@@ -7,57 +8,32 @@
 #include <unistd.h>
 #include <string.h>
 
-int display(void) {
-	int i;
-	uid_t ruid, euid, suid;
-	gid_t rgid, egid, sgid;
-	gid_t *groups = NULL;
-	int ngroups = 0;
-	long ngroups_max = sysconf(_SC_NGROUPS_MAX) + 1;
-
-	if (getresuid(&ruid, &euid, &suid) < 0) {
-		perror("Could not getresuid");
-		exit(1);
-	}
-	if (getresgid(&rgid, &egid, &sgid) < 0) {
-		perror("Could not getresgid");
-		exit(1);
-	}
-
-	/* Get our supplementary groups */
-	groups = (gid_t *) malloc(ngroups_max * sizeof(gid_t));
-	if (groups == NULL) {
-		printf("Could not allocate memory\n");
-		exit(EXIT_FAILURE);
-	}
-	ngroups = getgroups(ngroups_max, groups);
-	if (ngroups < 0) {
-		perror("getgroups");
-		free(groups);
-		exit(1);
-	}
-
-	/* Display dropped privileges */
-	printf("ruid=%d, euid=%d, suid=%d, ", ruid, euid, suid);
-	printf("rgid=%d, egid=%d, sgid=%d, ", rgid, egid, sgid);
-	printf("groups=");
-	for (i = 0; i < ngroups; i++) {
-		printf("%d", groups[i]);
-		if (i < ngroups - 1)
-			printf(",");
-	}
-	printf("\n");
-
-	free(groups);
-
-	return 0;
-}
-
+/* This code is based on example example code published om launchpad and github:
+ *
+ * - https://git.launchpad.net/~jdstrand/+git/test-setgroups
+ * - https://github.com/incopa/su-exec.git
+ *
+ * It's meant as a temporary solution for the Fuji version of the edgexfoundry
+ * snap, until the following PR (based on this code) lands in snap-preload:
+ *
+ * https://github.com/sergiusens/snapcraft-preload/pull/39
+ *
+ * The Fuji snap originally used gosu command to run postgres commands as the
+ * 'snap_daemon' user, but as goso doesn't support the extrausers passwd db
+ * extension used on Ubuntu Core, the snap couldn't be installed on a Core system.
+*/
 int main(int argc, char *argv[])
 {
+	char **cmdargv;
 	char *user = "snap_daemon";
-	printf("Before: ");
-	display();
+
+
+	if (argc < 2) {
+	  printf("Usage: %s command [args]\n", argv[0]);
+	  exit(0);
+	}
+
+	cmdargv = &argv[1];
 
 	/* Convert our username to a passwd entry */
 	struct passwd *pwd = getpwnam(user);
@@ -88,10 +64,10 @@ int main(int argc, char *argv[])
 		goto fail;
 	}
 
-	printf("After: ");
-	display();
+	execvp(cmdargv[0], cmdargv);
+	err(1, "%s", cmdargv[0]);
+	exit (1);
 
-	exit(0);
  fail:
 	exit(EXIT_FAILURE);
 }
