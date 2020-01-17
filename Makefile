@@ -9,18 +9,14 @@ CFLAGS += -g -O0 -Wall -Wstrict-prototypes
 # snapcraft will copy anything from here
 INSTALL_DIR := ../install
 
-all: wraplib.so drop
-
-wraplib.so:
-	${CC} ${CFLAGS} -fPIC -shared ${LDFLAGS} lib.c -o $@ -ldl
+all: drop
 
 drop:
-	${CC} ${CFLAGS} ${LDFLAGS} drop.c -o $@
+	${CC} ${CFLAGS} ${LDFLAGS} drop.c -o $@ -ldl
 
-install: wraplib.so drop
+install: drop
 	mkdir -p ${INSTALL_DIR}
-	cp -f wraplib.so ${INSTALL_DIR}/wraplib.so
 	cp -f drop ${INSTALL_DIR}/drop
 
 clean:
-	rm -f ./wraplib.so ./drop
+	rm -f ./drop

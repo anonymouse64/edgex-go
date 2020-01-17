@@ -16,6 +16,7 @@
  */
 
 #define _GNU_SOURCE
+#include <dlfcn.h>
 #include <err.h>
 #include <errno.h>
 #include <pwd.h>
@@ -39,11 +40,13 @@
  * 'snap_daemon' user, but as goso doesn't support the extrausers passwd db
  * extension used on Ubuntu Core, the snap couldn't be installed on a Core system.
 */
+
+static int (*original_setgroups) (size_t, const gid_t[]);
+
 int main(int argc, char *argv[])
 {
 	char **cmdargv;
 	char *user = "snap_daemon";
-
 
 	if (argc < 2) {
 	  printf("Usage: %s command [args]\n", argv[0]);
@@ -51,6 +54,17 @@ int main(int argc, char *argv[])
 	}
 
 	cmdargv = &argv[1];
+
+	// lookup the libc's setgroups() if we haven't already
+	if (!original_setgroups) {
+		dlerror();
+		original_setgroups = dlsym(RTLD_NEXT, "setgroups");
+		if (!original_setgroups) {
+			fprintf(stderr, "could not find setgroups in libc");
+			return -1;
+		}
+		dlerror();
+	}
 
 	/* Convert our username to a passwd entry */
 	struct passwd *pwd = getpwnam(user);
@@ -62,9 +76,7 @@ int main(int argc, char *argv[])
 	/* Drop supplementary groups first if can, using portable method
 	 * (should fail without LD_PRELOAD)
 	 */
-	gid_t gid_list[1];
-	gid_list[0] = pwd->pw_gid;
-	if (geteuid() == 0 && setgroups(1, gid_list) < 0) {
+	if (geteuid() == 0 && original_setgroups(0, NULL) < 0) {
 		perror("setgroups");
 		goto fail;
 	}
