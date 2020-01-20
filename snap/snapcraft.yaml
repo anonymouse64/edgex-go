@@ -499,7 +499,14 @@ parts:
     plugin: go
     go-importpath: github.com/tianon/gosu
     build-snaps: []
-    after: [go]
+    override-pull: |
+      snapcraftctl pull
+      cd $SNAPCRAFT_PART_SRC
+      # apply patches from snap/local/build-helpers/patches/gosu
+      for i in $SNAPCRAFT_STAGE/patches/gosu/*.patch; do
+        patch -p1 < $i
+      done
+    after: [build-helpers, go]
     build-environment:
       - CGO_ENABLED: "0"
   postgres:
@@ -524,7 +531,7 @@ parts:
       - postgresql-client
       - perl
 
-  go-build-helper:
+  build-helpers:
     plugin: dump
     # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
@@ -573,7 +580,7 @@ parts:
       - "-*"
     # build after kong to prevent staging go binaries into the snap as they
     # are large - see the TODO on the kong part
-    after: [go-build-helper, kong]
+    after: [build-helpers, kong]
 
   consul:
     after: [go]

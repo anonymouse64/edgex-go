@@ -1,0 +1,67 @@
+diff --git a/setup-user.go b/setup-user.go
+index 3a04ec9..3942295 100644
+--- a/setup-user.go
++++ b/setup-user.go
+@@ -1,6 +1,8 @@
+ package main
+ 
+ import (
++	"io"
++	"io/ioutil"
+ 	"os"
+ 	"syscall"
+ 
+@@ -8,6 +10,11 @@ import (
+ 	"github.com/opencontainers/runc/libcontainer/user"
+ )
+ 
++const (
++	extrausersPasswdPath = "/var/lib/extrausers/passwd"
++	extrausersGroupPath  = "/var/lib/extrausers/group"
++)
++
+ // this function comes from libcontainer/init_linux.go
+ // we don't use that directly because we don't want the whole namespaces package imported here
+ // (also, because we need minor modifications and it's not even exported)
+@@ -20,15 +27,38 @@ func SetupUser(u string) error {
+ 		Gid:  syscall.Getgid(),
+ 		Home: "/",
+ 	}
+-	passwdPath, err := user.GetPasswdPath()
++	// get default passwd and group readers
++	passwd, err := user.GetPasswd()
+ 	if err != nil {
+ 		return err
+ 	}
+-	groupPath, err := user.GetGroupPath()
++	defer passwd.Close()
++	group, err := user.GetGroup()
+ 	if err != nil {
+ 		return err
+ 	}
+-	execUser, err := user.GetExecUserPath(u, &defaultExecUser, passwdPath, groupPath)
++	defer group.Close()
++
++	// get extrausers for Ubuntu Core (if the files exist)
++	if _, err := os.Stat(extrausersPasswdPath); err == nil {
++		extrausersPasswd, err := os.Open(extrausersPasswdPath)
++		if err != nil {
++			return err
++		}
++		defer extrausersPasswd.Close()
++		passwd = ioutil.NopCloser(io.MultiReader(passwd, extrausersPasswd))
++	}
++
++	if _, err := os.Stat(extrausersGroupPath); err == nil {
++		extrausersGroup, err := os.Open(extrausersGroupPath)
++		if err != nil {
++			return err
++		}
++		defer extrausersGroup.Close()
++		group = ioutil.NopCloser(io.MultiReader(group, extrausersGroup))
++	}
++
++	execUser, err := user.GetExecUser(u, &defaultExecUser, passwd, group)
+ 	if err != nil {
+ 		return err
+ 	}
