@@ -95,13 +95,12 @@ apps:
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
   postgres:
     adapter: full
-    command: usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
+    command: bin/drop $SNAP/usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
     daemon: simple
     environment:
       CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
-      - bin/drop
       - bin/snapcraft-preload
     plugs:
       - network
