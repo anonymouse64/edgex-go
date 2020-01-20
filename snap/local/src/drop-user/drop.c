@@ -29,7 +29,7 @@
 /* This code is based on example example code published om launchpad and github:
  *
  * - https://git.launchpad.net/~jdstrand/+git/test-setgroups
- * - https://github.com/incopa/su-exec.git
+ * - https://github.com/ncopa/su-exec.git
  *
  * It's meant as a temporary solution for the Fuji version of the edgexfoundry
  * snap, until the following PR (based on this code) lands in snap-preload:
