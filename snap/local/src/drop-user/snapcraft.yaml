@@ -1,0 +1,27 @@
+name: test-setgroups
+version: "0"
+summary: test LD_PRELOAD with test-setgroups
+description: |
+ test LD_PRELOAD with test-setgroups
+grade: devel
+confinement: strict
+base: core18
+
+passthrough:
+  system-usernames:
+    snap_daemon: shared
+
+apps:
+  test-setgroups:
+    command: drop
+    environment:
+      LD_PRELOAD: "$SNAP/wraplib.so"
+  test-setgroups-no-preload:
+    command: drop
+
+parts:
+  maker:
+    plugin: make
+    source: .
+    build-packages:
+    - build-essential
