@@ -493,9 +493,7 @@ parts:
       - to amd64:
           - lib32stdc++6
   drop-user:
-    source: https://git.launchpad.net/~awe/+git/setgroups
-    source-type: git
-    source-branch: drop-cmd-no-preload
+    source: snap/local/src/drop-user
     plugin: make
     build-packages:
       - build-essential
