@@ -217,6 +217,7 @@ apps:
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-data/secrets-token.json
     daemon: simple
@@ -233,6 +234,7 @@ apps:
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json
     daemon: simple
@@ -246,6 +248,7 @@ apps:
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-command/secrets-token.json
     daemon: simple
@@ -259,6 +262,7 @@ apps:
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       # for support-logging we also want the default persistence to be on a
       # file so that we can use redis (which isn't supported with support-logging)
@@ -276,6 +280,7 @@ apps:
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-support-notifications/secrets-token.json
     daemon: simple
@@ -289,6 +294,7 @@ apps:
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json
     daemon: simple
@@ -303,6 +309,7 @@ apps:
     command: bin/support-rulesengine-wrapper.sh
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     daemon: simple
     plugs: [network, network-bind]
   sys-mgmt-agent:
@@ -313,6 +320,7 @@ apps:
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/consul-opt-usage.sh
     environment:
       ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
     daemon: simple
@@ -326,6 +334,8 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
+    command-chain:
+      - bin/consul-opt-usage.sh
     daemon: simple
     environment:
       CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
@@ -335,6 +345,8 @@ apps:
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
+    command-chain:
+      - bin/consul-opt-usage.sh
     command: >-
       bin/app-service-configurable -cp -r
       -confdir $SNAP_DATA/config/app-service-configurable/res
